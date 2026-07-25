@@ -10,6 +10,15 @@ if (!process.env.XIAOMI_API_KEY) {
 const app = express()
 app.use(cors())
 app.use(express.json())
+const port = Number(process.env.PORT || 3000)
+
+app.get('/api/health', (req, res) => {
+    res.json({
+        ok: true,
+        service: 'ai-resume-server'
+    })
+})
+
 app.post('/api/analyze', async (req, res) => {
     const resume = req.body.resume
     try {
@@ -48,6 +57,6 @@ app.post('/api/analyze', async (req, res) => {
         })
     }
 })
-app.listen(3000, () => {
-    console.log('server running')
+app.listen(port, () => {
+    console.log(`server running on ${port}`)
 })
