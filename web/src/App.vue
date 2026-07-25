@@ -107,7 +107,7 @@ async function analyze() {
   <div class="page-shell">
     <section class="hero-card">
       <div class="hero-copy">
-        <p class="eyebrow">AI 简历分析助手</p>
+        <p class="eyebrow">AI 简历分析助手666</p>
         <h1>让你的简历更有说服力</h1>
         <p class="intro">
           把简历内容粘贴进来，AI 会从技术优势、短板与提升建议三个维度，给出更适合求职场景的反馈。
