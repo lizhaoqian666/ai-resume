@@ -5,6 +5,9 @@ const resume = ref('')
 const result = ref('')
 const loading = ref(false)
 const error = ref('')
+const apiBaseUrl = (import.meta.env.DEV
+  ? '/api'
+  : import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
 
 const sampleResume = `前端开发工程师 / 3 年经验
 - 熟悉 Vue 3、Vuex、Pinia、Element Plus
@@ -77,7 +80,7 @@ async function analyze() {
   error.value = ''
 
   try {
-    const res = await fetch('/api/analyze', {
+    const res = await fetch(`${apiBaseUrl}/analyze`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

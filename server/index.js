@@ -2,6 +2,11 @@ const express = require('express')
 const axios = require('axios')
 const cors = require('cors')
 require('dotenv').config()
+
+if (!process.env.XIAOMI_API_KEY) {
+    console.warn('XIAOMI_API_KEY is missing. Set it in server/.env for local use or environment variables in production.')
+}
+
 const app = express()
 app.use(cors())
 app.use(express.json())
