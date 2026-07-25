@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import MarkdownIt from 'markdown-it'
 
 const resume = ref('')
 const result = ref('')
@@ -8,6 +9,18 @@ const error = ref('')
 const apiBaseUrl = (import.meta.env.DEV
   ? '/api'
   : import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
+
+const md = new MarkdownIt({
+  html: false,
+  linkify: true,
+  breaks: true
+})
+
+function renderMarkdown(text) {
+  return md.render(text || '')
+}
+
+const streamText = ref('')
 
 const sampleResume = `前端开发工程师 / 3 年经验
 - 熟悉 Vue 3、Vuex、Pinia、Element Plus
@@ -78,6 +91,8 @@ async function analyze() {
 
   loading.value = true
   error.value = ''
+  result.value = ''
+  streamText.value = ''
 
   try {
     const res = await fetch(`${apiBaseUrl}/analyze`, {
@@ -88,12 +103,37 @@ async function analyze() {
       body: JSON.stringify({ resume: resume.value })
     })
 
-    const data = await res.json()
     if (!res.ok) {
+      const data = await res.json()
       throw new Error(data?.error?.message || data?.error || '分析失败，请稍后重试。')
     }
 
-    result.value = data
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let done = false
+
+    while (!done) {
+      const { value, done: readerDone } = await reader.read()
+      done = readerDone
+      if (value) {
+        const chunk = decoder.decode(value, { stream: true })
+        const lines = chunk.split('\n\n')
+        lines.forEach((line) => {
+          if (!line.startsWith('data:')) return
+          const payload = line.replace(/^data:\s*/, '').trim()
+          if (!payload || payload === '[DONE]') return
+          try {
+            const parsed = JSON.parse(payload)
+            if (parsed.content) {
+              streamText.value += parsed.content
+              result.value = streamText.value
+            }
+          } catch (e) {
+            // ignore malformed payloads
+          }
+        })
+      }
+    }
   } catch (e) {
     error.value = e.message || '分析失败，请稍后重试。'
     result.value = ''
@@ -142,12 +182,12 @@ async function analyze() {
           <span>{{ loading ? '生成中...' : '基于 AI 建议' }}</span>
         </div>
 
-        <div v-if="loading" class="loading-state">正在生成专业分析...</div>
+        <div v-if="loading && !streamText" class="loading-state">正在生成专业分析...</div>
         <div v-else-if="error" class="error-state">{{ error }}</div>
         <div v-else-if="analysisSections.length" class="result-list">
           <article v-for="(item, index) in analysisSections" :key="item.title + index" class="result-item">
             <h3>{{ item.title }}</h3>
-            <p>{{ item.body }}</p>
+            <div class="markdown-body" v-html="renderMarkdown(item.body)" />
           </article>
         </div>
         <div v-else class="empty-state">输入内容后即可看到分析结果。</div>

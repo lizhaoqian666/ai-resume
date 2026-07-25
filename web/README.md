@@ -82,6 +82,8 @@ Expected response includes `ok: true`.
 
 Use example config in `deploy/nginx.ai-resume.conf.example`.
 
+If you open the site by public IP, make sure the Nginx `server_name` includes that IP or the block uses `default_server`, otherwise requests may fall through to the default site and return `404`.
+
 Key part:
 
 ```nginx
